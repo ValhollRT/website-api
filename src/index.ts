@@ -1,67 +1,63 @@
-
 import express, { Application } from 'express';
-import indexRoutes from './routes/databaseRoutes';
+import suggestionRoutes from './routes/SuggestionRoutes';
 import morgan from 'morgan';
 import path from 'path';
 import bodyParser from 'body-parser';
-import mariadb, { Pool } from 'mariadb';
-import { configuration } from './configuration'
+import { configuration } from './configuration';
+import http from 'http';
+import errorHandler from 'express';
+import { pool } from './pool';
 
 
 class Server {
 
-	public app: Application;
-	public pool: Pool;
-	private env: any;
+	private app: Application;
+	private server: any;
 
 	constructor() {
 		this.app = express();
 		this.config();
 		this.routes();
-
-		this.pool = mariadb.createPool({
-			host: configuration.dbIp,
-			database: configuration.dbSchema,
-			user: configuration.dbUser,
-			password: configuration.dbPass
-		});
-
 		this.checkConnectionDatabase();
 	}
 	config(): void {
 		this.app.set('port', configuration.hostPort);
-		this.app.use(bodyParser.urlencoded({ extended: false }));
 		this.app.use(bodyParser.json());
-		this.app.use(express.static(__dirname + './../../website-valhollrt/dist/website-valhollrt/'));
+		this.app.use(bodyParser.urlencoded({ extended: false }));
+		this.app.use(morgan('dev'));
+		this.app.use(express.urlencoded({ extended: false }));
+
+		var cors = require('cors');
+
+		// use it before all route definitions
+		this.app.use(cors({origin: 'http://localhost:4200'}));
+
+		this.app.use(express.static(__dirname + configuration.hostUrl));
 		this.app.get('/*', (req, res) => {
 			res.sendFile(path.join(__dirname));
 		});
 
-		this.app.use(morgan('dev'));
-		this.app.use(express.json());
-		this.app.use(express.urlencoded({ extended: false }));
-
-		//CORS Middleware
+		// error handling middleware should be loaded after the loading the routes
+		if ('development' == this.app.get('env')) {
+			this.app.use(errorHandler());
+		}
 	}
 	routes(): void {
-		this.app.use('/api/db', indexRoutes);
+		this.app.use('/api/', suggestionRoutes);
 	}
 
 	start(): void {
-		this.app.listen(this.app.get('port'), `${configuration.hostIp}`, () => {
-			console.log('Servidor iniciado en el puerto', configuration.hostPort);
+		this.server = http.createServer(this.app);
+		this.server.listen(this.app.get('port'), () => {
+			console.log('Server started port: ' + configuration.hostPort);
 		});
 	}
 
 	async checkConnectionDatabase() {
 		let conn;
 		try {
-			conn = await this.pool.getConnection();
-			console.log(conn);
-			const rows = await conn.query('SELECT 10 as val');
-			console.log(rows); //[ {val: 1}, meta: ... ]
-			// const res = await conn.query('INSERT INTO myTable value (?, ?)', [1, 'mariadb']);
-			// console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
+			conn = await pool.getConnection();
+			const rows = await conn.query('SELECT 1 as val');
 		} catch (err) {
 			throw err;
 		} finally {

@@ -7,6 +7,7 @@ export const configuration = {
     dbSchema: env.parsed?.DB_SCHEMA,
     dbUser: env.parsed?.DB_USER,
     dbPass: env.parsed?.DB_PASS,
-    hostIp: env.parsed?.HOST_PORT,
-    hostPort: env.parsed?.HOST_IP
+    hostIp: env.parsed?.HOST_IP,
+    hostPort: env.parsed?.HOST_PORT,
+    hostUrl: env.parsed?.HOST_URL
 }
