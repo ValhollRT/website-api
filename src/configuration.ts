@@ -9,5 +9,6 @@ export const configuration = {
     dbPass: env.parsed?.DB_PASS,
     hostIp: env.parsed?.HOST_IP,
     hostPort: env.parsed?.HOST_PORT,
-    hostUrl: env.parsed?.HOST_URL
+    hostUrl: env.parsed?.HOST_URL,
+    hostUrlOdin: env.parsed?.HOST_URL_ODIN
 }

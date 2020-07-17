@@ -8,7 +8,6 @@ import http from 'http';
 import errorHandler from 'express';
 import { pool } from './pool';
 
-
 class Server {
 
 	private app: Application;
@@ -30,9 +29,10 @@ class Server {
 		var cors = require('cors');
 
 		// use it before all route definitions
-		this.app.use(cors({origin: 'http://localhost:4200'}));
+		this.app.use(cors({ origin: 'http://localhost:4200' }));
 
 		this.app.use(express.static(__dirname + configuration.hostUrl));
+		this.app.use(express.static(__dirname + configuration.hostUrl + configuration.hostUrlOdin));
 		this.app.get('/*', (req, res) => {
 			res.sendFile(path.join(__dirname));
 		});
